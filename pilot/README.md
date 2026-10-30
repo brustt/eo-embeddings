@@ -2,10 +2,13 @@
 
 Scripts for the Indre-et-Loire 2025 pilot. Run from the repo root with `uv run --group pilot`.
 
-- `python -m pilot.fetch_boundary`: writes `data/indre-et-loire.geojson` (committed).
-- `python -m pilot.crop_rgb`: writes `outputs/indre-et-loire-2025/tessera-rgb.tif`.
-- `python -m pilot.build_cube [--slice]`: writes `data/cube/slice.zarr` (5 km test) or `data/cube/2025.zarr`; prints size and speed.
-- `python -m pilot.make_pca [--slice]`: writes `tessera-pca.tif` and `pca_model.json` (slice output goes to `outputs/indre-et-loire-slice/`).
+Steps, in order (add `--slice` to steps 3 to 5 for the 5 km test):
+
+1. `python -m pilot.fetch_boundary`: writes `pilot/data/indre-et-loire.geojson` (committed; only to refresh it).
+2. `python -m pilot.crop_rgb`: writes `outputs/indre-et-loire-2025/tessera-rgb.tif`.
+3. `python -m pilot.build_cube [--slice]`: writes `data/cube/slice.zarr` (5 km test) or `data/cube/2025.zarr`; prints size and speed.
+4. `python -m pilot.make_pca [--slice]`: writes `tessera-pca.tif` and `pca_model.json` (slice output goes to `outputs/indre-et-loire-slice/`).
+5. `pilot/check_outputs.py [--slice]`: runs `platform-publish validate` on the manifest (`publish/indre-et-loire-2025.publish.yaml`, or `pilot/slice.publish.yaml`), checks both COGs have valid pixels, compares the middle cube Block with a fresh read from the store, and reports inside pixels failing `valid_scale_mask` (and how many of those are finite).
 
 ## Boundary
 

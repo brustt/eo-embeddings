@@ -1,0 +1,22 @@
+event: indre-et-loire-slice
+data_shape: single-map
+start: 2025-01-01
+end: 2025-12-31
+title: Indre-et-Loire, 2025
+description: "Two views of the department: Tessera's ready-made image, and a PCA of its embeddings. Transparent means outside the department or no data."
+layers:
+  - slug: tessera-rgb
+    file: ../outputs/indre-et-loire-2025/tessera-rgb.tif
+    role: imagery
+    kind: raster
+    title: Tessera RGB, first three embedding values
+    rgb: {bands: [1, 2, 3], ranges: [[0, 255], [0, 255], [0, 255]]}
+    source_url: https://data.source.coop/tessera/tessera/zarr/v1.1
+  - slug: tessera-pca
+    file: ../outputs/indre-et-loire-slice/tessera-pca.tif
+    role: result
+    kind: raster
+    shown: false
+    title: Tessera PCA, colours have no fixed meaning
+    rgb: {bands: [1, 2, 3], ranges: [[0, 255], [0, 255], [0, 255]]}
+    source_url: https://data.source.coop/tessera/tessera/zarr/v1.1-dclimate
