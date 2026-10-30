@@ -4,6 +4,8 @@ Scripts for the Indre-et-Loire 2025 pilot. Run from the repo root with `uv run -
 
 - `python -m pilot.fetch_boundary`: writes `data/indre-et-loire.geojson` (committed).
 - `python -m pilot.crop_rgb`: writes `outputs/indre-et-loire-2025/tessera-rgb.tif`.
+- `python -m pilot.build_cube [--slice]`: writes `data/cube/slice.zarr` (5 km test) or `data/cube/2025.zarr`; prints size and speed.
+- `python -m pilot.make_pca [--slice]`: writes `tessera-pca.tif` and `pca_model.json` (slice output goes to `outputs/indre-et-loire-slice/`).
 
 ## Boundary
 

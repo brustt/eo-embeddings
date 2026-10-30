@@ -571,6 +571,7 @@ dev = [
 pilot = [
     { name = "platform-publish" },
     { name = "requests" },
+    { name = "scikit-learn" },
 ]
 
 [package.metadata]
@@ -589,6 +590,7 @@ dev = [
 pilot = [
     { name = "platform-publish", git = "https://github.com/brustt/platform-publish?rev=v0.2.2" },
     { name = "requests" },
+    { name = "scikit-learn" },
 ]
 
 [[package]]

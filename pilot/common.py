@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
+from geotessera.zarr import valid_scale_mask
 from rasterio.features import rasterize
 from rasterio.shutil import copy as rio_copy
 from rasterio.transform import Affine
@@ -91,8 +92,21 @@ def count_zero_pixels(rgb: np.ndarray, counted: np.ndarray) -> tuple[int, int]:
     )
 
 
-def write_cog(path, data: np.ndarray, transform: Affine, nodata=0) -> None:
-    """Write (bands, h, w) uint8 data as an EPSG:4326 COG with nearest overviews."""
+def to_cog(tmp, path, resampling=OVERVIEW_RESAMPLING) -> None:
+    """Copy a tiled GTiff to a COG and delete the GTiff."""
+    rio_copy(tmp, path, driver="COG", overview_resampling=resampling, **COG_OPTIONS)
+    Path(tmp).unlink()
+
+
+def write_cog(
+    path,
+    data: np.ndarray,
+    transform: Affine,
+    nodata=0,
+    crs="EPSG:4326",
+    resampling=OVERVIEW_RESAMPLING,
+) -> None:
+    """Write (bands, h, w) uint8 data as a COG (EPSG:4326 and nearest overviews by default)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp.tif")
@@ -102,7 +116,7 @@ def write_cog(path, data: np.ndarray, transform: Affine, nodata=0) -> None:
         height=data.shape[1],
         width=data.shape[2],
         dtype=data.dtype,
-        crs="EPSG:4326",
+        crs=crs,
         transform=transform,
         nodata=nodata,
         tiled=True,
@@ -111,11 +125,58 @@ def write_cog(path, data: np.ndarray, transform: Affine, nodata=0) -> None:
     )
     with rasterio.open(tmp, "w", **profile) as dst:
         dst.write(data)
-    rio_copy(
-        tmp,
-        path,
-        driver="COG",
-        overview_resampling=OVERVIEW_RESAMPLING,
-        **COG_OPTIONS,
-    )
-    tmp.unlink()
+    to_cog(tmp, path, resampling)
+
+
+PCA_SAMPLE = 100_000
+SEED = 0
+SLICE_OUTPUT_DIR = ROOT / "outputs" / "indre-et-loire-slice"
+CACHE_DIR = ROOT / "data" / "cache"
+CUBE_DIR = ROOT / "data" / "cube"
+
+
+def apply_sign_rule(components: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Flip each component so its largest loading (by magnitude) is positive."""
+    top = components[np.arange(len(components)), np.abs(components).argmax(axis=1)]
+    signs = np.where(top < 0, -1, 1)
+    return components * signs[:, None], signs
+
+
+def stretch(values: np.ndarray, p2, p98) -> np.ndarray:
+    """Map p2..p98 to 1..255 (rounded, clipped) as uint8."""
+    if p98 == p2:
+        raise ValueError(f"p98 equals p2 ({p2}); cannot stretch")
+    scaled = np.rint(1 + 254 * (values - p2) / (p98 - p2))
+    return np.clip(scaled, 1, 255).astype(np.uint8)
+
+
+def sample_pixels(
+    blocks, total: int = PCA_SAMPLE, seed: int = SEED, n_blocks: int | None = None
+) -> np.ndarray:
+    """Sample (n, bands) pixels from per-Block arrays, in the order given.
+
+    `blocks` may be a lazy iterator if `n_blocks` is given. Each Block gives `ceil(total / n_blocks)` pixels, or all of them if fewer, drawn
+    without replacement. The pool is shuffled and cut to `total`.
+    """
+    if n_blocks is None:
+        blocks = list(blocks)
+        n_blocks = len(blocks)
+    rng = np.random.default_rng(seed)
+    quota = -(-total // n_blocks)
+    picked = []
+    for px in blocks:
+        n = min(quota, len(px))
+        picked.append(px[rng.choice(len(px), size=n, replace=False)] if n else px[:0])
+    pool = np.concatenate(picked)
+    return pool[rng.permutation(len(pool))[:total]]
+
+
+def pca_pixels(emb, scales, inside, mean, components, p2, p98) -> np.ndarray:
+    """(bands, h, w) float embeddings to (3, h, w) uint8; 0 where outside or no data."""
+    valid = inside & valid_scale_mask(scales) & np.isfinite(emb).all(axis=0)
+    out = np.zeros((len(components), *inside.shape), dtype=np.uint8)
+    if valid.any():
+        proj = (emb[:, valid].T - mean) @ components.T
+        for i in range(len(components)):
+            out[i][valid] = stretch(proj[:, i], p2[i], p98[i])
+    return out
