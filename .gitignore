@@ -8,5 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
-docs/
+/data/
+/outputs/
+docs/*
+!docs/land-cover-check.md
 CLAUDE.md

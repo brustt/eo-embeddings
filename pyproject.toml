@@ -1,7 +1,30 @@
 [project]
 name = "eo-embeddings"
 version = "0.1.0"
-description = "Add your description here"
+description = "Extract and store Tessera embeddings as local cubes"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "geotessera==0.11.0",
+    "zarr",
+    "numpy",
+    "rasterio",
+]
+
+[dependency-groups]
+pilot = [
+    "requests",
+    "platform-publish @ git+https://github.com/brustt/platform-publish@v0.2.2",
+]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
