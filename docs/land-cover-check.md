@@ -56,11 +56,11 @@ Reference: same OSO 2023 as the slice section above.
 
 | # | Place | Expected OSO class | lat | lon | tessera-rgb (`outputs/indre-et-loire-2025/tessera-rgb.tif`) | tessera-pca (`outputs/indre-et-loire-2025/tessera-pca.tif`, department-wide fit) |
 |---|-------|--------------------|-----|-----|------|------|
-| 1 | Forest of Chinon | forest | 47.21 | 0.40 | PENDING (owner) | PENDING (owner) |
-| 2 | Champeigne cereal area | crop | 47.28 | 0.95 | PENDING (owner) | PENDING (owner) |
-| 3 | Central Tours | urban | 47.39 | 0.69 | PENDING (owner) | PENDING (owner) |
-| 4 | Loire at Tours | river / water | 47.40 | 0.69 | PENDING (owner) | PENDING (owner) |
-| 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | PENDING (owner) | PENDING (owner) |
+| 1 | Forest of Chinon | forest | 47.21 | 0.40 | PENDING (owner) | pass - quite ok |
+| 2 | Champeigne cereal area | crop | 47.28 | 0.95 | PENDING (owner) | pass - quite ok |
+| 3 | Central Tours | urban | 47.39 | 0.69 | PENDING (owner) | fail |
+| 4 | Loire at Tours | river / water | 47.40 | 0.69 | PENDING (owner) | fail |
+| 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | PENDING (owner) | fail |
 
 Each result cell takes `pass` or `fail` (plus a short note on the colours seen).
 
@@ -69,7 +69,7 @@ Layer verdicts:
 | Layer | Verdict |
 |-------|---------|
 | tessera-rgb | PENDING (owner) |
-| tessera-pca (department-wide fit) | PENDING (owner) |
+| tessera-pca (department-wide fit) | fail - urban and river places not visibly different |
 | Check as a whole (passes if at least one Layer passes) | PENDING (owner) |
 
 If neither Layer passes: do not push; raise it on the map (#1), the design defines no outcome for that case.
