@@ -16,11 +16,11 @@ Purpose: catch a bad `tessera-rgb` before the hours-long read. The agent prepare
 
 | # | Place | Expected OSO class | lat | lon | tessera-rgb (`outputs/indre-et-loire-2025/tessera-rgb.tif`) | tessera-pca (`outputs/indre-et-loire-slice/tessera-pca.tif`) |
 |---|-------|--------------------|-----|-----|------|------|
-| 1 | Forest of Chinon | forest | 47.21 | 0.40 | PENDING (owner) | not checked (outside slice) |
-| 2 | Champeigne cereal area | crop | 47.28 | 0.95 | PENDING (owner) | not checked (outside slice) |
-| 3 | Central Tours | urban | 47.39 | 0.69 | PENDING (owner) | PENDING (owner) - slice fit, not a result |
-| 4 | Loire at Tours | river / water | 47.40 | 0.69 | PENDING (owner) | PENDING (owner) - slice fit, not a result |
-| 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | PENDING (owner) | not checked (outside slice) |
+| 1 | Forest of Chinon | forest | 47.21 | 0.40 | pass | not checked (outside slice) |
+| 2 | Champeigne cereal area | crop | 47.28 | 0.95 | pass | not checked (outside slice) |
+| 3 | Central Tours | urban | 47.39 | 0.69 | pass | PENDING (owner) - slice fit, not a result |
+| 4 | Loire at Tours | river / water | 47.40 | 0.69 | pass | fail - slice fit, not a result |
+| 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | pass | not checked (outside slice) |
 
 Each result cell takes `pass` or `fail` (plus a short note on the colours seen).
 
@@ -28,9 +28,9 @@ Layer verdicts:
 
 | Layer | Verdict |
 |-------|---------|
-| tessera-rgb | PENDING (owner) |
-| tessera-pca (slice fit, not a result) | PENDING (owner) |
-| Check as a whole (passes if at least one Layer passes) | PENDING (owner) |
+| tessera-rgb | pass |
+| tessera-pca (slice fit, not a result) | fail |
+| Check as a whole (passes if at least one Layer passes) | pass|
 
 ## Pass rule
 
