@@ -45,3 +45,44 @@ A Layer passes when the forest, crop, urban and river places have visibly differ
   - `rgb-forest-chinon.png`, `rgb-champeigne-cereal.png`, `rgb-central-tours.png`, `rgb-loire-tours.png`, `rgb-vouvray-vineyards.png`
   - `pca-central-tours.png`, `pca-loire-tours.png` (about 2 km crop, 3x upscaled; slice fit, not a result)
   These are only a convenience; judge from the TIFFs if in doubt.
+
+# Department-wide land-cover check (issue #12)
+
+Purpose: the last gate before a permanent push. The full map is published on the LOCAL stack at http://brustt.localhost/earth-embeddings/indre-et-loire-2025. The agent prepared this record; every owner cell is owner-only and stays `PENDING (owner)` until the owner looks. The `tessera-pca` result comes from the department-wide fit (`outputs/indre-et-loire-2025/pca_model.json`), not the slice fit above.
+
+Reference: same OSO 2023 as the slice section above.
+
+## Places and results
+
+| # | Place | Expected OSO class | lat | lon | tessera-rgb (`outputs/indre-et-loire-2025/tessera-rgb.tif`) | tessera-pca (`outputs/indre-et-loire-2025/tessera-pca.tif`, department-wide fit) |
+|---|-------|--------------------|-----|-----|------|------|
+| 1 | Forest of Chinon | forest | 47.21 | 0.40 | PENDING (owner) | PENDING (owner) |
+| 2 | Champeigne cereal area | crop | 47.28 | 0.95 | PENDING (owner) | PENDING (owner) |
+| 3 | Central Tours | urban | 47.39 | 0.69 | PENDING (owner) | PENDING (owner) |
+| 4 | Loire at Tours | river / water | 47.40 | 0.69 | PENDING (owner) | PENDING (owner) |
+| 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | PENDING (owner) | PENDING (owner) |
+
+Each result cell takes `pass` or `fail` (plus a short note on the colours seen).
+
+Layer verdicts:
+
+| Layer | Verdict |
+|-------|---------|
+| tessera-rgb | PENDING (owner) |
+| tessera-pca (department-wide fit) | PENDING (owner) |
+| Check as a whole (passes if at least one Layer passes) | PENDING (owner) |
+
+If neither Layer passes: do not push; raise it on the map (#1), the design defines no outcome for that case.
+
+## Pass rule
+
+A Layer passes when the forest, crop, urban and river places have visibly different colours in it. The check as a whole passes when at least one Layer passes.
+
+## Where to look
+
+- Both COGs cover the whole department, so all five places are inside both. `tessera-rgb` is EPSG:4326, `tessera-pca` is EPSG:32631.
+- Compare against OSO 2023 at the same coordinates (QGIS: load the OSO raster and the TIFF, jump to lat/lon), or on the local page (PCA is off by default; switch it on in the Layers panel).
+- Helper previews (agent-made, gitignored), about 1 km half-height crops centred on each place, 3x upscaled, in `outputs/land-cover-check/` (the `dept` names do not overwrite the slice previews):
+  - `rgb-dept-forest-chinon.png`, `rgb-dept-champeigne-cereal.png`, `rgb-dept-central-tours.png`, `rgb-dept-loire-tours.png`, `rgb-dept-vouvray-vineyards.png`
+  - `pca-dept-forest-chinon.png`, `pca-dept-champeigne-cereal.png`, `pca-dept-central-tours.png`, `pca-dept-loire-tours.png`, `pca-dept-vouvray-vineyards.png`
+  These are only a convenience; judge from the TIFFs if in doubt.
