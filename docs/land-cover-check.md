@@ -18,7 +18,7 @@ Purpose: catch a bad `tessera-rgb` before the hours-long read. The agent prepare
 |---|-------|--------------------|-----|-----|------|------|
 | 1 | Forest of Chinon | forest | 47.21 | 0.40 | pass | not checked (outside slice) |
 | 2 | Champeigne cereal area | crop | 47.28 | 0.95 | pass | not checked (outside slice) |
-| 3 | Central Tours | urban | 47.39 | 0.69 | pass | PENDING (owner) - slice fit, not a result |
+| 3 | Central Tours | urban | 47.39 | 0.69 | pass | fail - slice fit, not a result |
 | 4 | Loire at Tours | river / water | 47.40 | 0.69 | pass | fail - slice fit, not a result |
 | 5 | Vouvray vineyards | vineyard / crop | 47.41 | 0.80 | pass | not checked (outside slice) |
 
