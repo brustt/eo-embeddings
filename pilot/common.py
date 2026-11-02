@@ -128,7 +128,7 @@ def write_cog(
     to_cog(tmp, path, resampling)
 
 
-PCA_SAMPLE = 100_000
+PCA_SAMPLE = 10_000_000
 SEED = 0
 SLICE_OUTPUT_DIR = ROOT / "outputs" / "indre-et-loire-slice"
 CACHE_DIR = ROOT / "data" / "cache"
@@ -163,12 +163,43 @@ def sample_pixels(
         n_blocks = len(blocks)
     rng = np.random.default_rng(seed)
     quota = -(-total // n_blocks)
-    picked = []
+    pool, filled = None, 0  # one preallocated array: no concatenate or permuted copy
     for px in blocks:
+        if pool is None:
+            pool = np.empty((quota * n_blocks, px.shape[1]), dtype=px.dtype)
         n = min(quota, len(px))
-        picked.append(px[rng.choice(len(px), size=n, replace=False)] if n else px[:0])
-    pool = np.concatenate(picked)
-    return pool[rng.permutation(len(pool))[:total]]
+        pool[filled:filled + n] = px[rng.choice(len(px), size=n, replace=False)] if n else px[:0]
+        filled += n
+    pool = pool[:filled]
+    rng.shuffle(pool)  # in place
+    return pool[:total]
+
+
+def fit_pca(sample: np.ndarray, n_components: int = 3, chunk: int = 1_000_000):
+    """Top principal components from the covariance of `sample`, in float64 chunks.
+
+    Returns (mean, components, explained_variance, explained_variance_ratio). The same
+    result as a full SVD up to component sign, but memory is one chunk, not several
+    copies of the sample.
+    """
+    n, bands = sample.shape
+    mean = sample.mean(axis=0, dtype=np.float64)
+    cov = np.zeros((bands, bands))
+    for i in range(0, n, chunk):
+        x = sample[i:i + chunk].astype(np.float64) - mean
+        cov += x.T @ x
+    cov /= n - 1
+    values, vectors = np.linalg.eigh(cov)  # ascending
+    top = np.argsort(values)[::-1][:n_components]
+    return mean, vectors[:, top].T, values[top], values[top] / np.trace(cov)
+
+
+def project(sample: np.ndarray, mean, components, chunk: int = 1_000_000) -> np.ndarray:
+    """(n, components) float64 projection of `sample`, computed in chunks."""
+    return np.concatenate([
+        (sample[i:i + chunk].astype(np.float64) - mean) @ components.T
+        for i in range(0, len(sample), chunk)
+    ])
 
 
 def pca_pixels(emb, scales, inside, mean, components, p2, p98) -> np.ndarray:

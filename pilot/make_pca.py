@@ -11,7 +11,6 @@ import rasterio
 from geotessera.zarr import valid_scale_mask
 from rasterio.transform import Affine
 from rasterio.windows import Window
-from sklearn.decomposition import PCA
 
 from eo_embeddings.cube import open_cube
 from pilot import common
@@ -46,9 +45,9 @@ def main() -> None:
     sample = common.sample_pixels(valid_pixels(), n_blocks=len(blocks))
     print(f"sampled {len(sample)} pixels")
 
-    pca = PCA(n_components=3, svd_solver="full").fit(sample)
-    components, signs = common.apply_sign_rule(pca.components_)
-    proj = (sample - pca.mean_) @ components.T
+    mean, components, variance, variance_ratio = common.fit_pca(sample)
+    components, signs = common.apply_sign_rule(components)
+    proj = common.project(sample, mean, components)
     p2, p98 = np.percentile(proj, [2, 98], axis=0)
     if (p98 == p2).any():
         raise ValueError(f"p98 equals p2 for a component: {p2} {p98}")
@@ -64,20 +63,20 @@ def main() -> None:
     with rasterio.open(tmp, "w", **profile) as dst:
         for r, c, _, inside in blocks:
             emb, scales = cube.read_block(r, c)
-            out = common.pca_pixels(emb.transpose(2, 0, 1), scales, inside, pca.mean_, components, p2, p98)
+            out = common.pca_pixels(emb.transpose(2, 0, 1), scales, inside, mean, components, p2, p98)
             dst.write(out, window=Window(c * bs, r * bs, out.shape[2], out.shape[1]))
     common.to_cog(tmp, out_dir / "tessera-pca.tif", resampling="AVERAGE")
 
     (out_dir / "pca_model.json").write_text(json.dumps({
-        "mean": pca.mean_.tolist(),
+        "mean": mean.tolist(),
         "components": components.tolist(),
         "sign_rule": "each component's largest loading by magnitude is positive",
         "signs_applied": signs.tolist(),
         "seed": common.SEED,
         "sample_size": len(sample),
         "percentiles": {"p2": p2.tolist(), "p98": p98.tolist()},
-        "explained_variance": pca.explained_variance_.tolist(),
-        "explained_variance_ratio": pca.explained_variance_ratio_.tolist(),
+        "explained_variance": variance.tolist(),
+        "explained_variance_ratio": variance_ratio.tolist(),
         "store_url": a["store_url"],
         "geotessera_version": a["geotessera_version"],
     }, indent=2))

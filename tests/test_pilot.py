@@ -138,6 +138,19 @@ def test_sample_quota_is_ceil_total_over_blocks():
     assert (out[:, 0] == 2.0).sum() == 2 and (out[:, 0] == 1.0).sum() == 4
 
 
+def test_fit_pca_matches_a_full_svd_and_project_follows_it():
+    rng = np.random.default_rng(3)
+    x = (rng.normal(size=(500, 6)) * np.array([5, 3, 2, 1, 0.5, 0.1])).astype(np.float32)
+    mean, comps, var, ratio = common.fit_pca(x, chunk=64)  # several chunks
+    xc = x.astype(np.float64) - x.astype(np.float64).mean(axis=0)
+    _, s, vt = np.linalg.svd(xc, full_matrices=False)
+    assert np.allclose(mean, x.mean(axis=0))
+    assert np.allclose(np.abs(comps), np.abs(vt[:3]), atol=1e-6)
+    assert np.allclose(var, s[:3] ** 2 / (len(x) - 1))
+    assert np.allclose(ratio, s[:3] ** 2 / (s ** 2).sum())
+    assert np.allclose(common.project(x, mean, comps, chunk=64), xc @ comps.T)
+
+
 def test_pca_pixels_follow_the_pixel_table():
     bands = 2
     emb = np.zeros((bands, 1, 5), dtype=np.float32)
